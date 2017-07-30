@@ -3,10 +3,10 @@ from slacker import Slacker
 import websocket
 import json
 import logging
+import argparse
 from utils import detect_url, parse_abstract
 
-
-class slackbot:
+class Slackbot:
     def __init__(self, token):
         self._token = token
         self.slack = Slacker(token)
@@ -40,14 +40,30 @@ class slackbot:
 
 
 if __name__ == '__main__':
+    # Parse Team name
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--team', type=str)
+    args = parser.parse_args()
+    team_name = args.team
+
     # Read token for access
-    token = open('./token').read()[:-1]
+    with open('./token', 'r') as f:
+        token_dict = json.load(f)
+    token = token_dict[team_name]
+    print('Team: ', team_name)
+    print('Token: ', token)
 
     # Create Log
-    logging.basicConfig(filename='./log', level=logging.DEBUG)
-
+    logging.basicConfig(
+        level=logging.DEBUG,  # Set level to log
+        format='[%(asctime)s] %(message)s',
+        datefmt='%m%d %H:%M:%S',
+        handlers=[
+            logging.FileHandler("./logs/"+team_name),
+            logging.StreamHandler()]
+        )
     # Launch slack bot!
-    bot = slackbot(token)
+    bot = Slackbot(token)
 
     while True:
         data = bot.recv()
